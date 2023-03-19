@@ -25,7 +25,6 @@ pub struct Config {
 
 impl Config {
     pub fn build(args: &[String]) -> Result<Config, &'static str> {
-        dbg!(args);
         if args.len() < 3 {
             return Err("not enough arguments, please specify the query and the file_path");
         }
