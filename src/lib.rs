@@ -2,7 +2,7 @@ use std::error::Error;
 use std::{env, fs};
 
 pub fn run(config: Config) -> Result<(), Box<dyn Error>> {
-    let contents = fs::read_to_string(config.file_path)?;
+    let contents = read_contents(&config)?;
 
     let result = if config.ignore_case {
         search_case_insensitive(&config.query, &contents)
@@ -16,31 +16,34 @@ pub fn run(config: Config) -> Result<(), Box<dyn Error>> {
 
     return Ok(());
 }
+
 pub struct Config {
     pub query: String,
-    pub file_path: String,
+    pub file_paths: Vec<String>,
     pub ignore_case: bool,
 }
 
 impl Config {
     pub fn build(args: &[String]) -> Result<Config, &'static str> {
+        dbg!(args);
         if args.len() < 3 {
             return Err("not enough arguments, please specify the query and the file_path");
         }
 
         let query = args[1].clone();
-        let file_path = args[2].clone();
+        let mut file_paths: Vec<String> = Vec::from(&args[2..]);
 
         // ignore case
         // command line argument --no-case takes precedence over env variable
         let mut ignore_case = env::var("IGNORE_CASE").is_ok();
-        if args.len() > 3 && args[3] == "--no-case" {
+        if args.last().unwrap() == "--no-case" {
             ignore_case = true;
+            file_paths.pop();
         }
 
         return Ok(Config {
             query,
-            file_path,
+            file_paths,
             ignore_case,
         });
     }
@@ -71,6 +74,16 @@ fn search_case_insensitive<'a>(query: &str, contents: &'a str) -> Vec<&'a str> {
     result
 }
 
+fn read_contents(config: &Config) -> Result<String, Box<dyn Error>> {
+    let mut contents = String::new();
+
+    for file_path in &config.file_paths {
+        let content = fs::read_to_string(file_path)?;
+        contents.push_str(&content);
+    }
+
+    Ok(contents)
+}
 #[cfg(test)]
 mod tests {
     use super::*;
