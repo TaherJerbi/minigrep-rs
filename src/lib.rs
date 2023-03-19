@@ -79,6 +79,7 @@ fn read_contents(config: &Config) -> Result<String, Box<dyn Error>> {
     for file_path in &config.file_paths {
         let content = fs::read_to_string(file_path)?;
         contents.push_str(&content);
+        contents.push('\n');
     }
 
     Ok(contents)
